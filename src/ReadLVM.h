@@ -11,4 +11,5 @@ using namespace std;
 
 vector<pair<double, double>> read_samples(const string &filename); 
 
+
 #endif
