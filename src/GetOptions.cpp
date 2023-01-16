@@ -1,7 +1,7 @@
 #include "GetOptions.h"
 
 Options::Options() {
-	h_opt = d_opt = t_opt = m_opt = M_opt = p_opt = 0;
+	h_opt = d_opt = t_opt = m_opt = M_opt = p_opt = f_opt = 0;
 	minVal = maxVal = 0;
 	title.clear();
 	path.clear();
@@ -39,7 +39,7 @@ const char* Options::GetTile() {
 int Options::getOptions(int argc, char **argv) 
 {
 	int i, c;
-	const char *options = "hd:t:m:M:p:";
+	const char *options = "hfd:t:m:M:p:";
 	string tempDir, tempPath, tempTitle;
 	// Structure which would store the metadata
 	struct stat sb;
@@ -50,6 +50,9 @@ int Options::getOptions(int argc, char **argv)
 			// help
 			case 'h':
 				h_opt = 1;
+				break;
+			case 'f':
+				f_opt = 1;
 				break;
 			// destiny folder
 			case 'd':

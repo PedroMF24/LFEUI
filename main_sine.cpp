@@ -10,6 +10,7 @@
  */
 
 #include <sys/stat.h>
+#include <algorithm>
 
 #include "TF1.h"
 #include "TH1D.h"
@@ -23,7 +24,11 @@
 #include "src/ReadLVM.h"
 #include "src/GetOptions.h"
 
-
+double degToRad(double deg) 
+{ 
+    //Converting degrees to radians 
+    return (deg * M_PI / 180.0); 
+}
 
 int main(int argc, char** argv) 
 {
@@ -31,6 +36,8 @@ int main(int argc, char** argv)
 	double min, max;
 
 	Options Opt;
+
+	SineType Data;
 
 	if (Opt.getOptions(argc,argv) < 0 || Opt.h_opt == 1) {
         printf("%s\n", &Opt.help_message[0]);
@@ -45,20 +52,19 @@ int main(int argc, char** argv)
 	
     TApplication app("app", NULL, NULL);
 	TCanvas *c = new TCanvas();
-
-    vector<pair<double,double>> values;
-    vector<pair<double,double>> errors;
 	
-    values = read_samples(Opt.path.c_str());
+    Data = read_sine(Opt.path.c_str());
+	vector<double>::iterator it;
+	it = max_element(Data.AngleCorr.begin(), Data.AngleCorr.end());
 
 	if (Opt.m_opt)
 		min = Opt.minVal;
-	else 
+	else
 		min = 0;
 	if (Opt.M_opt)
 		max = Opt.maxVal;
 	else 
-		max = values.size();
+		max = *it;
 
     // for (auto &point : values)
     // {
@@ -70,22 +76,27 @@ int main(int argc, char** argv)
 	// min = 1010; // 0
 	// max = 1058; //values.size();
 
-    for (int i = 0; i < values.size(); i++)
+	min = 4.8;
+	max = 6.5;
+    for (int i = 0; i < Data.AngleCorr.size(); i++)
     {
-        if ((values[i].first >= min) && (values[i].first <= max)) {
-            x.push_back(values[i].first);
-            y.push_back(values[i].second);
-			ex.push_back (0.5);
-            ey.push_back(sqrt(values[i].second));
-		}
+        //if ((degToRad(Data.AngleCorr[i]) >= min) && (degToRad(Data.AngleCorr[i]) <= max)) {
+            x.push_back(degToRad(Data.AngleCorr[i]));
+            y.push_back(Data.Ratio[i]);
+			ex.push_back (degToRad(1.5));
+			double dP = 2;
+			double dRatio = ( (1/Data.Pin[i]) + (Data.Pout[i]/(Data.Pin[i]*Data.Pin[i])) )*dP;
+            ey.push_back(dRatio);
+		//}
     }
 
 	TGraphErrors *gr = new TGraphErrors(x.size(), &x[0], &y[0], &ex[0], &ey[0]);
+	// TGraph *gr = new TGraph(x.size(), &x[0], &y[0]);
 
 	if (Opt.t_opt)
 		gr->SetTitle(Opt.GetTile());
 	else
-		gr->SetTitle(" ");
+		gr->SetTitle("Sine");
 
     // gr->SetTitle("EA 132 CI");
 
@@ -94,31 +105,39 @@ int main(int argc, char** argv)
 	// gr->SetMarkerColor(4);
 	// gr->SetMarkerStyle(20);
 	gr->GetXaxis()->CenterTitle();
-	gr->GetXaxis()->SetTitle("#lambda [nm]");
-	gr->GetYaxis()->SetTitle("Counts");
+	gr->GetXaxis()->SetTitle("Angle of #lambda/2 [rad]");
+	gr->GetYaxis()->SetTitle("P_{out} / P_{in}");
 
-	// TF1* func = new TF1("func","chebyshev"); //  [0]+[1]*exp( -0.5*( (x-[2])/[3] )**2 )
-    //func->SetParNames("C1", "C2", "m","s");
-	// func->SetParameters(0,300,1030, 8);
-
-	// gr->Fit(func);
+	if (Opt.f_opt) {
+		TF1* func = new TF1("func","[0]+[1]*sin([2] + [3]*x)"); //  [0]+[1]*exp( -0.5*( (x-[2])/[3] )**2 )
+		func->SetParNames("Offset", "Amplitude","Phase", "Frequency");
+		func->SetParameters(0.5, 0.5, 0, 3);
+		gr->Fit(func);
+		// func->Draw();
+	}
 	// [3] + [0]*exp(-0.5*pow((x-[1])/[2],2))
 	// p0*exp(-0.5*((x-p1)/p2)^2)
 
 	gr->Draw("AP");
+	// TF1* func = new TF1("f", "0.5+0.5*sin(2*x)", 0, 6);
+	// func->Draw();
 
     c->Update();
-	c->Draw();
+	// c->Draw();
+
+	string name = Opt.GetTile();
 	if (Opt.d_opt) {
 		string auxDir = Opt.dir;
-		c->SaveAs(((auxDir.append("Graph.png")).c_str()));
+		auxDir.append(name);
+		// c->SaveAs(((auxDir.append(".png")).c_str()));
 		printf("Saved in %s\n", &auxDir[0]);
 	}
 	else if (Opt.d_opt == 0) {
 		// default save
 		string defDir = "bin/";
-		defDir.append("Graph.png");
-		c->SaveAs((defDir.c_str()));
+		defDir.append(name);
+		defDir.append(".png");
+		// c->SaveAs((defDir.c_str()));
 	}
 	else {
 		cout << "Output not saved" << endl;

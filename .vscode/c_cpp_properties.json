@@ -4,7 +4,6 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/home/pmfig/root/include",
                 "/home/pmfig/root/include"
             ],
             "defines": [],

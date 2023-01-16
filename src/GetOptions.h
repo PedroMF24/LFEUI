@@ -27,7 +27,7 @@ class Options {
         const char* GetTile();
 
     // private:
-    int h_opt, d_opt, t_opt, m_opt, M_opt, p_opt;
+    int h_opt, d_opt, t_opt, m_opt, M_opt, p_opt, f_opt;
     string dir, title, path, help_message;
     double minVal, maxVal;
 };
