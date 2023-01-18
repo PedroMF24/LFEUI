@@ -21,6 +21,7 @@
 
 #include <sys/stat.h>
 
+#include "TF1.h"
 #include "TH1D.h"
 #include "TGraph.h"
 #include "TStyle.h"
@@ -116,7 +117,9 @@ int main(int argc, char** argv)
 	vector<double> x, y;
 	double min, max;
 
-    vector<string> nameOfFiles = list_dir("/home/pmfig/dev/LFEUI/data/Sessao2/C_Iris/Espectros/");
+    // vector<string> nameOfFiles = list_dir("/home/pmfig/dev/LFEUI/data/Sessao3/Espectros/");
+    // vector<string> nameOfFiles = list_dir("/home/pmfig/dev/LFEUI/data/Sessao2/C_Iris/Espectros/");
+    vector<string> nameOfFiles = list_dir("/home/pmfig/dev/LFEUI/data/Sessao2/S_Iris/Espectros/");
 
     vector<pair<double,double>> values;
 
@@ -124,31 +127,96 @@ int main(int argc, char** argv)
     TCanvas *c = new TCanvas("canvas", "canvas", 1400, 800);
 
     TMultiGraph *mg = new TMultiGraph();
-    mg->SetTitle("Spectral Broadening CI");
+    mg->SetTitle("Spectral Broadening SI S2");
 	
     for (int i = 0; i < nameOfFiles.size(); i++)
     {
         // nameOfFiles[i].erase(nameOfFiles[i].find_last_not_of("\r\n") + 1);
-        string FilePath = "data/Sessao2/C_Iris/Espectros/";
+        // string FilePath = "data/Sessao2/C_Iris/Espectros/";
+        string FilePath = "data/Sessao2/S_Iris/Espectros/";
         FilePath.append(nameOfFiles[i]);
         values = read_samples(FilePath.c_str());
         
-        for (int j = 0; j < values.size(); j++)
-        {
-            if ((values[j].first >= 1010) && (values[j].first <= 1060)) {
-                x.push_back(values[j].first);
-                y.push_back(values[j].second);
-            }
-        }
         TGraph *gr = new TGraph(x.size(), &x[0], &y[0]);
+        if (nameOfFiles[i] == "Espectro_manha.lvm") {
+            for (int j = 0; j < values.size(); j++)
+            {
+                if ((values[j].first >= 1010) && (values[j].first <= 1060)) {
+                    // x.push_back(values[j].first/5.3);
+                    // y.push_back(values[j].second/5.3);
+                    gr->AddPoint(values[j].first, values[j].second/8); // C_Iris/4.7 S_Iris/8
+                }
+            }
+            TF1* func = new TF1("func","gaus");
+            func->SetLineColor(kRed);
+            func->SetLineWidth(2);
+            gr->Fit("func");
+            cout << "Got here Manhã - Red\n";
+            gr->SetMarkerColor(0);
+            gr->SetMarkerStyle(9);
+            gr->SetMarkerSize(0.1);
+            func->Draw("SAME");
+            mg->Add(gr);
+
+        }
+        else if (nameOfFiles[i] == "Espectro_tarde.lvm") {
+            for (int j = 0; j < values.size(); j++)
+            {
+                if ((values[j].first >= 1010) && (values[j].first <= 1060)) {
+                    // x.push_back(values[j].first/5.3);
+                    // y.push_back(values[j].second/5.3);
+                    gr->AddPoint(values[j].first, values[j].second/8);
+                }
+            }
+            TF1* func = new TF1("func","gaus");
+            func->SetLineColor(kBlue);
+            func->SetLineWidth(2);
+            gr->Fit("func");
+            cout << "Got here Tarde - Blue\n";
+            gr->SetMarkerColor(0);
+            gr->SetMarkerStyle(9);
+            gr->SetMarkerSize(0.1);
+            func->Draw("SAME");
+            mg->Add(gr);
+        }
+        else {
+            for (int j = 0; j < values.size(); j++)
+            {
+                if ((values[j].first >= 1010) && (values[j].first <= 1060)) {
+                    // x.push_back(values[j].first);
+                    // y.push_back(values[j].second);
+                    gr->AddPoint(values[j].first, values[j].second);
+                }
+            }
+            gr->SetMarkerColor(i+1);
+            gr->SetMarkerStyle(7);
+            mg->Add(gr);
+        }
         // gr->SetTitle(" ");
         // gr->SetLineWidth(2);
         // gr->SetLineColor(i);
-        gr->SetMarkerColor(i+1);
-        gr->SetMarkerStyle(7);
-        mg->Add(gr);
+        // gr->SetMarkerColor(i+1);
+        // gr->SetMarkerStyle(7);
+        // mg->Add(gr);
         x.clear();
         y.clear();
+
+        
+        // if (nameOfFiles[i] == "Espectro_de_referencia.lvm") {
+        //     TGraph *gr = new TGraph(x.size(), &x[0], &y[0]);
+        //     TF1* func = new TF1("func","gaus");
+        //     gr->Fit("func");
+        //     func->Draw("SAME");
+        //     cout << "Got here\n";
+        //     // gr->SetTitle(" ");
+        //     // gr->SetLineWidth(2);
+        //     // gr->SetLineColor(i);
+        //     gr->SetMarkerColor(i+1);
+        //     gr->SetMarkerStyle(7);
+        //     mg->Add(gr);
+        // }
+        // x.clear();
+        // y.clear();
     }
 
     mg->GetXaxis()->CenterTitle();
@@ -156,7 +224,7 @@ int main(int argc, char** argv)
     mg->GetYaxis()->SetTitle("Counts");
 	mg->Draw("AP");
     c->Update();
-    c->SaveAs("bin/Spectral Broadening CI.png");
+    c->SaveAs("bin/Spectral Broadening SI S2.png");
 
 	TRootCanvas *rc = (TRootCanvas *)c->GetCanvasImp();
 	rc->Connect("CloseWindow()", "TApplication", gApplication, "Terminate()");

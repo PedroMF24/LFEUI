@@ -83,8 +83,8 @@ int main(int argc, char** argv)
         //if ((degToRad(Data.AngleCorr[i]) >= min) && (degToRad(Data.AngleCorr[i]) <= max)) {
             x.push_back(degToRad(Data.AngleCorr[i]));
             y.push_back(Data.Ratio[i]);
-			ex.push_back (degToRad(1.5));
-			double dP = 2;
+			ex.push_back (degToRad(2));
+			double dP = 3;
 			double dRatio = ( (1/Data.Pin[i]) + (Data.Pout[i]/(Data.Pin[i]*Data.Pin[i])) )*dP;
             ey.push_back(dRatio);
 		//}
