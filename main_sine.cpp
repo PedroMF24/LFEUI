@@ -75,7 +75,6 @@ int main(int argc, char** argv)
 	
 	// min = 1010; // 0
 	// max = 1058; //values.size();
-
 	min = 4.8;
 	max = 6.5;
     for (int i = 0; i < Data.AngleCorr.size(); i++)
@@ -92,14 +91,14 @@ int main(int argc, char** argv)
 
 	TGraphErrors *gr = new TGraphErrors(x.size(), &x[0], &y[0], &ex[0], &ey[0]);
 	// TGraph *gr = new TGraph(x.size(), &x[0], &y[0]);
-
+	
 	if (Opt.t_opt)
 		gr->SetTitle(Opt.GetTile());
 	else
-		gr->SetTitle("Sine");
+		gr->SetTitle("Calib #lambda/2");
 
     // gr->SetTitle("EA 132 CI");
-
+	gr->SetTitle("Calib #lambda/2");
 	gr->SetLineWidth(2);
 	gr->SetLineColor(4);
 	// gr->SetMarkerColor(4);
@@ -123,6 +122,7 @@ int main(int argc, char** argv)
 	// func->Draw();
 
     c->Update();
+	
 	// c->Draw();
 
 	string name = Opt.GetTile();
@@ -137,12 +137,12 @@ int main(int argc, char** argv)
 		string defDir = "bin/";
 		defDir.append(name);
 		defDir.append(".png");
-		// c->SaveAs((defDir.c_str()));
+		c->SaveAs((defDir.c_str()));
 	}
 	else {
 		cout << "Output not saved" << endl;
 	}
-	// c->SaveAs((name.append("_lorentz.png").c_str()));
+	c->SaveAs((name.append("_final.png").c_str()));
 
 	TRootCanvas *rc = (TRootCanvas *)c->GetCanvasImp();
 	rc->Connect("CloseWindow()", "TApplication", gApplication, "Terminate()");

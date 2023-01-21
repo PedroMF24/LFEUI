@@ -29,8 +29,19 @@
 #include "TRootCanvas.h"
 #include "TApplication.h"
 #include "TMultiGraph.h"
+#include "TLegend.h"
 
 using namespace std;
+
+string removeLvm(string str) 
+{ 
+    int n = str.length(); 
+    // Check if string has ".lvm" at 
+    // the end 
+    if (n >= 4 && str.substr(n - 4) == ".lvm") 
+        str.erase(n - 4, 4); 
+    return str;
+}
 
 vector<pair<double, double>> read_samples(const string &filename) { // double* integ_time, 
 
@@ -117,9 +128,9 @@ int main(int argc, char** argv)
 	vector<double> x, y;
 	double min, max;
 
-    // vector<string> nameOfFiles = list_dir("/home/pmfig/dev/LFEUI/data/Sessao3/Espectros/");
+    vector<string> nameOfFiles = list_dir("/home/pmfig/dev/LFEUI/data/Sessao3/Espectros/");
     // vector<string> nameOfFiles = list_dir("/home/pmfig/dev/LFEUI/data/Sessao2/C_Iris/Espectros/");
-    vector<string> nameOfFiles = list_dir("/home/pmfig/dev/LFEUI/data/Sessao2/S_Iris/Espectros/");
+    // vector<string> nameOfFiles = list_dir("/home/pmfig/dev/LFEUI/data/Sessao2/S_Iris/Espectros/");
 
     vector<pair<double,double>> values;
 
@@ -127,13 +138,21 @@ int main(int argc, char** argv)
     TCanvas *c = new TCanvas("canvas", "canvas", 1400, 800);
 
     TMultiGraph *mg = new TMultiGraph();
-    mg->SetTitle("Spectral Broadening SI S2");
+    TGraph *grRef = new TGraph();
+    TLegend* legend = new TLegend(0.80,0.50,0.9,0.9); // S_iris 0.80,0.65 : C_Iris 0.80,0.6 : 
+    mg->SetTitle("Spectral Broadening S3");
+    // mg->SetTitle("Spectral Broadening CI S2");
+    // mg->SetTitle("Spectral Broadening SI S2");
 	
     for (int i = 0; i < nameOfFiles.size(); i++)
     {
         // nameOfFiles[i].erase(nameOfFiles[i].find_last_not_of("\r\n") + 1);
+
+        string FilePath = "data/Sessao3/Espectros/";
         // string FilePath = "data/Sessao2/C_Iris/Espectros/";
-        string FilePath = "data/Sessao2/S_Iris/Espectros/";
+        // string FilePath = "data/Sessao2/S_Iris/Espectros/";
+        
+
         FilePath.append(nameOfFiles[i]);
         values = read_samples(FilePath.c_str());
         
@@ -159,25 +178,30 @@ int main(int argc, char** argv)
             mg->Add(gr);
 
         }
-        else if (nameOfFiles[i] == "Espectro_tarde.lvm") {
+        else if (nameOfFiles[i] == "Ref_Spectre.lvm") {
             for (int j = 0; j < values.size(); j++)
             {
                 if ((values[j].first >= 1010) && (values[j].first <= 1060)) {
                     // x.push_back(values[j].first/5.3);
                     // y.push_back(values[j].second/5.3);
-                    gr->AddPoint(values[j].first, values[j].second/8);
+                    gr->AddPoint(values[j].first, values[j].second*1.70);
                 }
             }
-            TF1* func = new TF1("func","gaus");
-            func->SetLineColor(kBlue);
-            func->SetLineWidth(2);
-            gr->Fit("func");
-            cout << "Got here Tarde - Blue\n";
-            gr->SetMarkerColor(0);
-            gr->SetMarkerStyle(9);
-            gr->SetMarkerSize(0.1);
-            func->Draw("SAME");
-            mg->Add(gr);
+            // TF1* func = new TF1("func","gaus");
+            // func->SetLineColor(kBlue);
+            // func->SetLineWidth(2);
+            // gr->Fit("func");
+            // cout << "Got here Tarde - Blue\n";
+            // gr->SetMarkerColor(0);
+            // gr->SetMarkerStyle(9);
+            // gr->SetMarkerSize(0.1);
+            // func->Draw("SAME");
+            gr->SetLineColor(41);
+            gr->SetLineWidth(2);
+            // gr->Draw("AC");
+            legend->AddEntry(gr,"Ref Curve","l");
+            grRef = gr;
+            // mg->Add(gr);
         }
         else {
             for (int j = 0; j < values.size(); j++)
@@ -188,8 +212,12 @@ int main(int argc, char** argv)
                     gr->AddPoint(values[j].first, values[j].second);
                 }
             }
-            gr->SetMarkerColor(i+1);
+            if (i < 9)
+                gr->SetMarkerColor(i+1);
+            else 
+                gr->SetMarkerColor(i+30);
             gr->SetMarkerStyle(7);
+            legend->AddEntry(gr,removeLvm(nameOfFiles[i]).c_str(), "p");
             mg->Add(gr);
         }
         // gr->SetTitle(" ");
@@ -222,9 +250,22 @@ int main(int argc, char** argv)
     mg->GetXaxis()->CenterTitle();
     mg->GetXaxis()->SetTitle("#lambda [nm]");
     mg->GetYaxis()->SetTitle("Counts");
-	mg->Draw("AP");
+    
+	mg->Draw("AP"); // AP
+    grRef->Draw("SAME");
+    
+
+
+    legend->SetHeader("#lambda/2 angle [#circ]","C"); // option "C" allows to center the header
+    // legend->AddEntry("f1","Function abs(#frac{sin(x)}{x})","l");
+    legend->Draw();
+
+    // c->BuildLegend();
     c->Update();
-    c->SaveAs("bin/Spectral Broadening SI S2.png");
+
+    c->SaveAs("bin/Spectral Broadening S3.png");
+    // c->SaveAs("bin/Spectral Broadening CI S2.png");
+    // c->SaveAs("bin/Spectral Broadening SI S2.png");
 
 	TRootCanvas *rc = (TRootCanvas *)c->GetCanvasImp();
 	rc->Connect("CloseWindow()", "TApplication", gApplication, "Terminate()");
